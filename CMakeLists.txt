@@ -95,6 +95,12 @@ if(CDM_BUILD_VST3)
   set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES OFF CACHE BOOL "" FORCE)
   set(SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF CACHE BOOL "" FORCE)
   set(SMTG_CREATE_PLUGIN_LINK OFF CACHE BOOL "" FORCE)
+  if(WIN32)
+    # The SDK's validator is a GUI-subsystem executable whose entry point is
+    # main(), which mingw refuses to link. It is only a test host, but
+    # enabling it also makes our plugin target depend on it.
+    set(SMTG_RUN_VST_VALIDATOR OFF CACHE BOOL "" FORCE)
+  endif()
   add_subdirectory("${CDM_VST3SDK_DIR}" "${CMAKE_BINARY_DIR}/vst3sdk" EXCLUDE_FROM_ALL)
 
   set(CDM_VST3_SOURCES
