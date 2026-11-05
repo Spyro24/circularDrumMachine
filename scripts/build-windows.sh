@@ -9,6 +9,11 @@
 # SDK are there. The standalone additionally needs mingw builds of SDL2,
 # freetype, libpng and GLEW: under msys2 those come from the mingw-w64-* packages;
 # for a cross build point CDM_WINDOWS_DEPS at a prefix that has them.
+#
+# Only our two targets are built, not the SDK's whole tree: mingw builds the
+# SDK's validator as a GUI-subsystem executable whose entry point is main(),
+# which does not link. moduleinfotool still builds, because the plugin's
+# post-build step needs it.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -59,8 +64,12 @@ cmake -S . -B "$build" \
   -DCDM_BUILD_STANDALONE="$standalone" \
   -DCDM_BUILD_VST3="$vst3"
 
-echo "== building with $jobs jobs =="
-cmake --build "$build" --parallel "$jobs"
+targets=()
+[ "$standalone" = ON ] && targets+=(circular_drum_machine)
+[ "$vst3" = ON ] && targets+=(circular_drum_machine_vst3)
+
+echo "== building ${targets[*]} with $jobs jobs =="
+cmake --build "$build" --parallel "$jobs" --target "${targets[@]}"
 
 echo
 echo "== artifacts =="
