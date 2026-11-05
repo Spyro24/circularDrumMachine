@@ -39,13 +39,14 @@ endif()
 # --- standalone -------------------------------------------------------------
 if(CDM_BUILD_STANDALONE)
   pkg_check_modules(GLEW REQUIRED IMPORTED_TARGET glew)
-  pkg_check_modules(LIBPNG REQUIRED IMPORTED_TARGET libpng)
+  # libpng ships as libpng.pc on Debian and as libpng16.pc on some mingw setups.
+  pkg_search_module(LIBPNG REQUIRED IMPORTED_TARGET libpng libpng16)
   find_package(OpenGL REQUIRED)
 
   # Prefer a system SDL2. Otherwise use the libsdl2-dev package unpacked under
   # vendor/ (same version as the installed runtime, no root required):
   #   cd vendor && apt-get download libsdl2-dev && dpkg -x libsdl2-dev_*.deb sdl2/sdklocal
-  pkg_check_modules(SDL2 QUIET IMPORTED_TARGET sdl2)
+  pkg_search_module(SDL2 QUIET IMPORTED_TARGET sdl2 SDL2)
   if(SDL2_FOUND)
     set(SDL2_TARGET PkgConfig::SDL2)
   elseif(WIN32)
