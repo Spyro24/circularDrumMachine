@@ -67,7 +67,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows-standalone
-          path: build/windows/**/circular_drum_machine.exe
+          path: |
+            build/windows/*.exe
+            build/windows/*.dll
 
       - uses: actions/upload-artifact@v4
         with:

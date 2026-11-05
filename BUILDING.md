@@ -6,8 +6,8 @@ Four artifacts come out of this tree:
 | --- | --- |
 | Linux standalone | `build/linux/circular_drum_machine` |
 | Linux VST3 | `build/linux/VST3/Release/circular_drum_machine_vst3.vst3` |
-| Windows standalone | `build/windows/VST3/.../circular_drum_machine.exe` (CI) |
-| Windows VST3 | `build/windows/VST3/Release/circular_drum_machine_vst3.vst3` (CI) |
+| Windows standalone | `build/windows/circular_drum_machine.exe` (CI) |
+| Windows VST3 | `build/windows/VST3/circular_drum_machine_vst3.vst3` (CI, one file) |
 
 The plugin contains the full interface: its editor draws the same 880×500
 canvas the app draws, into the window the host hands over (an X11 window on
@@ -55,6 +55,14 @@ libpng and GLEW packages, then `./scripts/build-windows.sh all`. Pushing the
 repository and downloading the `windows-standalone` / `windows-vst3` artifacts
 is the intended path.
 
+The Windows plug-in is a single `.vst3` file rather than a bundle, with the C++
+runtime and freetype linked statically, so it can be dropped into the host's
+VST3 folder on its own. Two SDK features are switched off there for mingw: the
+validator, which the SDK builds as a GUI-subsystem binary with a `main()` and so
+never links, and the bundle layout, whose post-build step probes the module
+before ninja has copied it into `Contents/x86_64-win`. Linux keeps both, so the
+validator still runs there.
+
 Local cross builds from Linux work too, once mingw-w64 is installed
 (`apt install g++-mingw-w64-x86-64`):
 
@@ -71,7 +79,9 @@ because a native Linux SDL2 cannot be linked into a Windows binary.
 ## The VST3 SDK
 
 `scripts/fetch-vst3sdk.sh` shallow-clones the SDK into `vendor/vst3sdk` (about
-250 MB with submodules) and is a no-op once it is there. Configure with
+250 MB with submodules) and is a no-op once it is there. It also patches one SDK
+header for mingw, whose C library has `_aligned_malloc` but no C11
+`std::aligned_alloc`; the patch is a no-op on the other platforms. Configure with
 `-DCDM_VST3SDK_DIR=<path>` to use a copy elsewhere. The build sets
 `SMTG_ENABLE_VSTGUI_SUPPORT` and the SDK's example options to `OFF`: this
 project brings its own renderer, and the SDK's sample hosts want GTK.

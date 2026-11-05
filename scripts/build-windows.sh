@@ -71,6 +71,18 @@ targets=()
 echo "== building ${targets[*]} with $jobs jobs =="
 cmake --build "$build" --parallel "$jobs" --target "${targets[@]}"
 
+# The standalone links SDL2, freetype, libpng and GLEW as DLLs. Gather them,
+# and their own mingw dependencies, beside the .exe so the folder can be shipped
+# as it is. The plug-in needs none of this: it is linked statically.
+exe="$build/circular_drum_machine.exe"
+if [ "$standalone" = ON ] && [ -f "$exe" ] && command -v ldd >/dev/null 2>&1; then
+  collected=0
+  for dll in $(ldd "$exe" | awk '$2 == "=>" && $3 ~ /^\/mingw64\/bin\// {print $3}'); do
+    cp -u "$dll" "$build/" && collected=$((collected + 1))
+  done
+  echo "collected $collected runtime DLLs beside the exe"
+fi
+
 echo
 echo "== artifacts =="
 find "$build" -maxdepth 5 \( -name '*.vst3' -o -name 'circular_drum_machine.exe' \) 2>/dev/null |
