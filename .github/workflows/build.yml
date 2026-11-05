@@ -1,0 +1,76 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake build-essential pkg-config \
+            libsdl2-dev libglew-dev libfreetype6-dev libpng-dev libx11-dev
+
+      - name: VST3 SDK
+        run: ./scripts/fetch-vst3sdk.sh
+
+      - name: build standalone and plugin
+        run: ./scripts/build-linux.sh all
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-standalone
+          path: build/linux/circular_drum_machine
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-vst3
+          path: build/linux/**/*.vst3
+          include-hidden-files: true
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-freetype
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-glew
+            mingw-w64-x86_64-SDL2
+
+      - name: VST3 SDK
+        run: ./scripts/fetch-vst3sdk.sh
+
+      - name: build standalone and plugin
+        run: ./scripts/build-windows.sh all
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-standalone
+          path: build/windows/**/circular_drum_machine.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-vst3
+          path: build/windows/**/*.vst3
+          include-hidden-files: true

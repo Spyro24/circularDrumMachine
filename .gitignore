@@ -1,0 +1,5 @@
+build/
+# fetched by scripts/fetch-vst3sdk.sh (~250 MB), not part of the sources
+vendor/vst3sdk/
+# unpacked .deb used when the system has no SDL2 headers
+vendor/sdl2/
