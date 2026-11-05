@@ -93,6 +93,7 @@ from the host's process callback.
 
 ## State
 
-Linux standalone and Linux VST3 build and run; the plugin passes the SDK
-validator. The Windows build files and CI workflow are in place but have not
-been run here — the first Windows build happens on the GitHub runner.
+Both platforms build in CI, and the Linux plugin passes the SDK validator. What
+is still untested is a real host: no DAW has loaded either plugin yet, so the
+editor, input forwarding and host transport are unverified outside the validator,
+and nothing here has been run on Windows itself.
