@@ -100,6 +100,10 @@ if(CDM_BUILD_VST3)
     # main(), which mingw refuses to link. It is only a test host, but
     # enabling it also makes our plugin target depend on it.
     set(SMTG_RUN_VST_VALIDATOR OFF CACHE BOOL "" FORCE)
+    # A single .vst3 DLL instead of a bundle: the bundle's post-build step runs
+    # moduleinfotool on the module from inside ninja, where it is probed before
+    # it has been copied into Contents/x86_64-win. Linux keeps the bundle.
+    set(SMTG_CREATE_BUNDLE_FOR_WINDOWS OFF CACHE BOOL "" FORCE)
   endif()
   add_subdirectory("${CDM_VST3SDK_DIR}" "${CMAKE_BINARY_DIR}/vst3sdk" EXCLUDE_FROM_ALL)
 
@@ -125,5 +129,10 @@ if(CDM_BUILD_VST3)
   if(UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
     target_link_libraries(circular_drum_machine_vst3 PRIVATE X11::X11)
+  endif()
+  if(WIN32)
+    # One file a host can load on its own: the C++ runtime and freetype come in
+    # statically, so nothing has to be installed next to the plug-in.
+    target_link_options(circular_drum_machine_vst3 PRIVATE -static)
   endif()
 endif()
