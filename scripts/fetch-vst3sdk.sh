@@ -18,15 +18,24 @@ else
 fi
 
 # alignedalloc.h reaches for C11 std::aligned_alloc, which mingw-w64's C library
-# does not have (it has _aligned_malloc). The header lives in the public.sdk
-# submodule, so the patch goes there. It changes nothing on the other platforms
-# and applies only once.
+# does not have (it has _aligned_malloc). The header is part of the public.sdk
+# submodule, so the patch is applied there. It applies once, and changes nothing
+# on the other platforms. Dependency-free: `patch` is not installed everywhere,
+# but the clone means git is.
 sub="$sdk/public.sdk"
-if [ -f "$patch" ] && [ -d "$sub" ]; then
-  if patch -p1 -d "$sub" --dry-run -N -s < "$patch" >/dev/null 2>&1; then
-    patch -p1 -d "$sub" -N -s < "$patch"
+header="$sub/source/vst/utility/alignedalloc.h"
+if [ -f "$patch" ] && [ -f "$header" ]; then
+  if grep -q '__MINGW32__' "$header"; then
+    echo "aligned_alloc patch already applied"
+  elif git -C "$sub" apply --check "$patch" 2>/dev/null; then
+    git -C "$sub" apply "$patch"
     echo "applied $(basename "$patch")"
   else
-    echo "$(basename "$patch") already applied"
+    echo "error: $patch does not apply to $header" >&2
+    exit 1
+  fi
+  if ! grep -q '__MINGW32__' "$header"; then
+    echo "error: $header is still unpatched" >&2
+    exit 1
   fi
 fi
